@@ -31,7 +31,6 @@ cd chef_infra
 ### Topology
 
 Desired Sequence of provisioning and convergence:
-(this order is maintained if you simply run `kitchen converge` from the top.)
 
 1. Chef Management Master (standalone.rb)
 2. Elastic Search cluster (search.rb)
