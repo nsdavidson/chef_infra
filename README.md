@@ -23,11 +23,44 @@ It will perform component installation and configuration for an end-to-end integ
 ## Usage
 
 The demonstrates spinning up a Backended cluster in AWS from a Managed Chef account.
+First, ensure you have a working `knife-ec2` and working Managed Chef account setup:
+```
+~/Devel/ChefProject/chef_infra (master=)$ cat ~/.chef/config.rb
+# See http://docs.chef.io/config_rb_knife.html for more information on knife configuration options
+
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                "yourmanageduser"
+client_key               "#{current_dir}/yourmanageduser.pem"
+ssl_ca_path              "/Users/jmiller/.chef/ca_certs"
+# for validatorless, comment out next two
+validation_client_name   "yourmanagedorg-validator"
+validation_key           "#{current_dir}/yourmanagedorg-validator.pem"
+chef_server_url          "https://manage.chef.io/organizations/yourmanagedorg"
+ssl_verify_mode          :verify_none
+knife[:supermarket_site] = 'https://supermarket.chef.io'
+knife[:aws_access_key_id] = ".."
+knife[:aws_secret_access_key] = ".."
+knife[:ssh_key_name] = ".."
+knife[:ssh_user] = "centos"
+knife[:image] = "ami-6bb7310b"
+knife[:flavor] = "c4.large"
+knife[:region] = "us-west-2"
+knife[:availability_zone] = "us-west-2a"
+
+versioned_cookbooks true
+knife[:chef_repo_path] = Dir.pwd
+~/Devel/ChefProject/chef_infra (master=)$
+```
+
+Next, spin it up:
 ```
 git clone https://github.com/jeremymv2/chef_infra.git
 cd chef_infra
 ./scripts/backend_cluster.sh
 ```
+
 ### Topology
 
 Desired Sequence of provisioning and convergence:
