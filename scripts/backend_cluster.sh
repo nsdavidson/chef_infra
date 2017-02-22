@@ -2,8 +2,9 @@
 set -e
 
 STACK_PREFIX=chefinfra
-chef gem list knife-config | grep -c knife-config || echo chef gem install knife-config
-VAULT_ADMIN=`knife config node_name | awk -F: '{print $2}' | sed -e 's/^ *//'`
+chef gem list knife-config | grep -q knife-config || chef gem install knife-config
+KNIFE_USER=`knife config node_name | awk -F: '{print $2}' | sed -e 's/^ *//'`
+VAULT_ADMIN=${KNIFE_USER:-admin}
 
 knife group destroy chef_stack_admins -y
 knife group create chef_stack_admins
