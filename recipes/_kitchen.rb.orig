@@ -1,0 +1,49 @@
+node.automatic['ipaddress'] = node['network']['interfaces']['enp0s8']['addresses'].keys[1]
+
+hosts = Chef::Util::FileEdit.new('/etc/hosts')
+hosts.insert_line_if_no_match(/backend01-centos-72/, '192.168.254.2 backend01-centos-72')
+hosts.insert_line_if_no_match(/backend02-centos-72/, '192.168.254.3 backend02-centos-72')
+hosts.insert_line_if_no_match(/backend03-centos-72/, '192.168.2541 backend03-centos-72')
+hosts.insert_line_if_no_match(/frontend01-centos-72/, '192.168.254.4 frontend01-centos-72')
+hosts.insert_line_if_no_match(/frontend02-centos-72/, '192.168.254.5 frontend02-centos-72')
+
+hosts.insert_line_if_no_match(/automate-centoos-72/, '192.168.254.7 automate-centos-72')
+hosts.insert_line_if_no_match(/standalone-centos-72/, '192.168.254.6 standalone-centos-72')
+hosts.insert_line_if_no_match(/supermarket-centos-72/, '192.168.254.8 supermarket-centos-72')
+hosts.insert_line_if_no_match(/builder01-centos-72/, '192.168.254.9 builder01-centos-72')
+hosts.insert_line_if_no_match(/search01-centos-72/, '192.168.254.10 search01-centos-72')
+hosts.insert_line_if_no_match(/search02-centos-72/, '192.168.254.11 search02-centos-72')
+hosts.insert_line_if_no_match(/search03-centos-72/, '192.168.254.12 search03-centos-72')
+hosts.search_file_replace_line(/#{node['fqdn']}/, "#{node['ipaddress']} #{node['fqdn']}")
+hosts.write_file
+
+client_pem = data_bag_item('chef_stack', 'client_keys')["#{node['fqdn']}.pem"]
+
+directory '/etc/chef'
+
+file '/etc/chef/client.pem' do
+  content client_pem
+end
+
+template '/etc/chef/client.rb' do
+  source 'client.rb.erb'
+end
+
+bash 'fetch SSL cert' do
+  code <<-EOH
+    mkdir -p /opt/shared_data/trusted_certs
+    mkdir -p /etc/chef/trusted_certs
+    echo | openssl s_client -showcerts -servername standalone-centos-72 -connect standalone-centos-72:443 2>/dev/null | openssl x509 -inform pem -text > /opt/shared_data/trusted_certs/standalone-centos-72.crt
+    cp -f /opt/shared_data/trusted_certs/* /etc/chef/trusted_certs/
+    EOH
+end.run_action(:run)
+
+<<<<<<< 0b470287f2e683f4f0b7ee9ef60f18d57915c817
+# TODO optimize for idempotency
+if node.run_list?('recipe[jnj_chef_stack::builder')
+  execute "knife node create #{node['fqdn']} -c /etc/chef/client.rb -d"
+end
+=======
+# TODO: optimize for idempotency
+# execute "knife node create #{node['fqdn']} -c /etc/chef/client.rb -d"
+>>>>>>> Work towards using object backups for kitchen

@@ -1,0 +1,189 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  # You may wish to disable always updating cookbooks in CI or other testing environments.
+  # For example:
+  #   always_update_cookbooks: <%= !ENV['CI'] %>
+  always_update_cookbooks: true
+  data_bags_path: test/fixtures/data_bags
+  roles_path: test/fixtures/roles
+  #log_level: info
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: centos-7.2
+    driver:
+      synced_folders:
+        - ['data/','/opt/shared_data']
+
+suites:
+  - name: standalone
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.6'}]
+    run_list:
+      - role[chef_master]
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::standalone]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+        supermarket_fqdn: supermarket-centos-72
+  - name: automate
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.7'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::automate]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+      chef-server:
+        automate:
+          delivery:
+            chef_server: https://standalone-centos-72/organizations/jnj
+  - name: supermarket
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.8'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::supermarket]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+  - name: backend01
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.2'}]
+    run_list:
+      - role[bootstrap_backend]
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::backend]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        bootstrap_backend: backend01-centos-72
+        publish_address: 192.168.254.2
+  - name: backend02
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.3'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::backend]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        bootstrap_backend: backend01-centos-72
+        publish_address: 192.168.254.3
+  - name: frontend01
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.4'}]
+    run_list:
+      - role[bootstrap_frontend]
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::frontend]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+  - name: frontend02
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.5'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::frontend]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+  - name: builder01
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.9'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::workflow_builder]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+        automate_fqdn: automate-centos-72
+        supermarket_fqdn: supermarket-centos-72
+  - name: search01
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.10'}]
+    run_list:
+      - role[bootstrap_search]
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::search]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        bootstrap_search: search01-centos-72
+        publish_address: 192.168.254.10
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+        automate_fqdn: automate-centos-72
+  - name: search02
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.11'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::search]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        bootstrap_search: search01-centos-72
+        publish_address: 192.168.254.10
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+        automate_fqdn: automate-centos-72
+  - name: search03
+    driver:
+      network:
+        - ['private_network', {ip: '192.168.254.12'}]
+    run_list:
+      - recipe[jnj_chef_stack::_kitchen]
+      - recipe[jnj_chef_stack::search]
+    verifier:
+      inspec_tests:
+        - test/recipes
+    attributes:
+      chef_stack:
+        bootstrap_search: search01-centos-72
+        publish_address: 192.168.254.10
+        chef_server_url: https://standalone-centos-72/organizations/jnj
+        automate_fqdn: automate-centos-72

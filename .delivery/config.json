@@ -1,0 +1,25 @@
+{
+  "version": "2",
+  "build_cookbook": {
+    "name": "build_cookbook",
+    "path": ".delivery/build_cookbook"
+  },
+  "job_dispatch": {
+     "version": "v2"
+  },
+  "skip_phases": [],
+  "build_nodes": {},
+  "dependencies": [],
+  "delivery-truck": {
+    "lint": {
+      "foodcritic": {
+        "ignore_rules": ["FC064", "FC065", "FC019", "FC047"],
+        "excludes": ["spec", "test"]
+      }
+    },
+    "publish": {
+      "supermarket": "https://itsusmplsd03445.jnj.com",
+      "chef_server": "true"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+name 'chef_infra'
+maintainer 'Jeremy Miller'
+maintainer_email 'jmiller@chef.io'
+license 'all_rights'
+description 'Installs/Configures chef_infra'
+long_description 'Installs/Configures chef_infra'
+version '0.4.6'
+
+depends 'chef_stack'
+depends 'chef-vault'

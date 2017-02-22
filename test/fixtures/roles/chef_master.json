@@ -1,0 +1,14 @@
+{
+  "name": "chef_master",
+  "default_attributes": {
+    "chef_stack": {
+      "is_chef_master": true
+    }
+  },
+  "json_class": "Chef::Role",
+  "run_list": [ ],
+  "description": "The Chef Server master role",
+  "chef_type": "role",
+  "override_attributes": {
+  }
+}
