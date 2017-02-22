@@ -2,23 +2,25 @@
 set -e
 
 STACK_PREFIX=chefinfra
-chef gem list knife-config | grep -q knife-config || chef gem install knife-config
+declare -a requiredgems=("knife-acl" "knife-config" "knife-ec2")
+for gem in "${requiredgems[@]}"
+do
+  chef gem list "$gem" | grep -q "$gem" | chef gem install "$gem"
+done
 KNIFE_USER=`knife config node_name | awk -F: '{print $2}' | sed -e 's/^ *//'`
 VAULT_ADMIN=${KNIFE_USER:-admin}
 
-knife group destroy chef_stack_admins -y
-knife group create chef_stack_admins
+knife group show chef_stack_admins || knife group create chef_stack_admins 
 for role in `ls test/fixtures/roles/*.json`; do knife role from file $role & done
-knife vault delete chef_stack infra_secrets -M client -y
-knife vault create chef_stack infra_secrets -A $VAULT_ADMIN -J test/fixtures/data_bags/chef_stack/infra_secrets.json -S "name:$STACK_PREFIX**" -M client
+knife vault show chef_stack infra_secrets || knife vault create chef_stack infra_secrets -A $VAULT_ADMIN -J test/fixtures/data_bags/chef_stack/infra_secrets.json -S "name:$STACK_PREFIX**" -M client 
 knife acl add group chef_stack_admins data chef_stack create,update,read
 knife acl add group chef_stack_admins containers clients read
 
-knife ec2 server create -N $STACK_PREFIX-backend01 -r ""
-knife ec2 server create -N $STACK_PREFIX-backend02 -r ""
-knife ec2 server create -N $STACK_PREFIX-backend03 -r ""
-knife ec2 server create -N $STACK_PREFIX-frontend01 -r ""
-knife ec2 server create -N $STACK_PREFIX-frontend02 -r ""
+declare -a servers=("backend01" "backend02" "backend03" "frontend01" "frontend02")
+for server in "${servers[@]}"
+do
+  knife node show $STACK_PREFIX-$server || knife ec2 server create -N $STACK_PREFIX-$server
+done
 
 knife vault update chef_stack infra_secrets -A $VAULT_ADMIN -S "name:$STACK_PREFIX**" -M client
 knife acl bulk add group chef_stack_admins clients '.*' read -y
@@ -26,6 +28,7 @@ knife acl bulk add group chef_stack_admins clients '.*' read -y
 knife group add client $STACK_PREFIX-backend01 chef_stack_admins
 knife group add client $STACK_PREFIX-frontend01 chef_stack_admins
 
+berks install
 berks update
 berks vendor
 knife cookbook upload -a -o berks-cookbooks/

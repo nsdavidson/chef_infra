@@ -3,14 +3,14 @@
 # Recipe:: standalone
 #
 # Copyright:: 2017, The Authors, All Rights Reserved.
-include_recipe 'jnj_chef_stack'
+include_recipe 'chef_infra'
 
 # See if an automate exists yet before setting the data collector url.
-automate_fqdn_array = search_for_nodes(%(chef_environment:"#{node.chef_environment}") + ' AND recipes:jnj_chef_stack\:\:automate').map { |node| node['fqdn'] }
+automate_fqdn_array = search_for_nodes(%(chef_environment:"#{node.chef_environment}") + ' AND recipes:chef_infra\:\:automate').map { |node| node['fqdn'] }
 node.default['chef-server']['standalone']['data_collector']['root_url'] = "https://#{automate_fqdn_array[0]}/data-collector/v0/" unless automate_fqdn_array.empty?
 
 # See if a supermarket exists yet before setting the oc_id information.
-supermarket_fqdn_array = search_for_nodes(%(chef_environment:"#{node.chef_environment}") + ' AND recipes:jnj_chef_stack\:\:supermarket').map { |node| node['fqdn'] }
+supermarket_fqdn_array = search_for_nodes(%(chef_environment:"#{node.chef_environment}") + ' AND recipes:chef_infra\:\:supermarket').map { |node| node['fqdn'] }
 unless supermarket_fqdn_array.empty?
   node.default['chef-server']['standalone']['oc_id']['applications']['supermarket'] = {}
   node.default['chef-server']['standalone']['oc_id']['applications']['supermarket']['redirect_uri'] = "https://#{supermarket_fqdn_array[0]}/auth/chef_oauth2/callback"
@@ -19,7 +19,7 @@ end
 # Merge the standalone and default configuration attributes, with the standalone winning any conflict.
 node.default['chef-server']['configuration'] = Chef::Mixin::DeepMerge.deep_merge(node.default['chef-server']['standalone'], node.default['chef-server']['configuration'])
 
-include_recipe 'jnj_chef_stack::_server'
+include_recipe 'chef_infra::_server'
 
 ruby_block 'gather automate secrets' do
   block do
